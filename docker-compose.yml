@@ -1,0 +1,76 @@
+version: '3'
+
+services:
+  php:
+    build: docker/php
+    container_name: php.${COMPOSE_PROJECT_NAME}
+    volumes:
+      - ./:/app
+    environment:
+      HOST_IP: ${HOST_IP}
+      XDEBUG_CONFIG: "idekey=PHPSTORM remote_enable=On remote_host=${HOST_IP}"
+
+  db:
+    build: docker/mysql
+    container_name: db.${COMPOSE_PROJECT_NAME}
+    volumes:
+      - ./docker/data/mysql:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: ${COMPOSE_PROJECT_NAME}
+      MYSQL_USER: ${COMPOSE_PROJECT_NAME}
+      MYSQL_PASSWORD: ${COMPOSE_PROJECT_NAME}
+      MYSQL_ROOT_PASSWORD: root
+      VIRTUAL_HOST: db.${COMPOSE_PROJECT_NAME}
+
+  rest:
+    build: docker/nginx
+    container_name: rest.${COMPOSE_PROJECT_NAME}
+    depends_on:
+      - php
+    volumes:
+      - ./:/app
+      - ./docker/nginx/vhosts/rest.conf:/etc/nginx/sites-enabled/default
+    ports:
+      - "80:80"
+    environment:
+      VIRTUAL_HOST: rest.${COMPOSE_PROJECT_NAME}
+
+  admin:
+    build: docker/nginx
+    container_name: admin.${COMPOSE_PROJECT_NAME}
+    depends_on:
+      - php
+    volumes:
+      - ./:/app
+      - ./docker/nginx/vhosts/admin.conf:/etc/nginx/sites-enabled/default
+    ports:
+      - "8010:80"
+    environment:
+      VIRTUAL_HOST: admin.${COMPOSE_PROJECT_NAME}
+
+  frontend:
+    build: docker/nginx
+    container_name: frontend.${COMPOSE_PROJECT_NAME}
+    depends_on:
+      - php
+    volumes:
+      - ./:/app
+      - ./docker/nginx/vhosts/frontend.conf:/etc/nginx/sites-enabled/default
+    ports:
+      - "8020:80"
+    environment:
+      VIRTUAL_HOST: frontend.${COMPOSE_PROJECT_NAME}
+
+  redis:
+    image: redis:3
+    container_name: redis.${COMPOSE_PROJECT_NAME}
+    volumes:
+      - ./docker/data/redis:/data
+      - ./docker/redis/redis.conf:/etc/redis.conf
+    command: ["redis-server", "/etc/redis.conf"]
+    ports:
+      - "6379:6379"
+    environment:
+      VIRTUAL_HOST: redis.${COMPOSE_PROJECT_NAME}
