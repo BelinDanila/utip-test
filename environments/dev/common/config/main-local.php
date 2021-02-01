@@ -17,5 +17,13 @@ return [
             // for the mailer to send real emails.
             'useFileTransport' => true,
         ],
+        'redis' => [
+            'class' => 'yii\redis\Connection',
+            'hostname' => 'redis.utip-test',
+            'database' => 0,
+        ],
+        'cache' => [
+            'keyPrefix' => 'utip-test:',
+        ],
     ],
 ];
